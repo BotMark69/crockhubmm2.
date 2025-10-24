@@ -1,3 +1,180 @@
+--// Modern Source Selection GUI with Discord Webhook //--
+
+-- CONFIG --
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1431088456116867155/SKePbkwlfv_bU7kr2OOEU1IKnpbneQBejCzJnySv_M8Tnh4YrQH-w0JphV3Z4gM2QGnO"  -- ⚠️ Replace this with your real webhook in private testing only
+local DATASTORE_NAME = "ChoiceTotals"  -- used to track total votes
+
+-- SERVICES --
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local DataStoreService = game:GetService("DataStoreService")
+
+-- LOCAL VARIABLES --
+local player = Players.LocalPlayer
+local tiktokVotes = 0
+local youtubeVotes = 0
+
+-- Try loading totals (optional if you don’t want to store globally)
+local success, store = pcall(function()
+	return DataStoreService:GetDataStore(DATASTORE_NAME)
+end)
+local choiceStore = success and store or nil
+
+if choiceStore then
+	pcall(function()
+		tiktokVotes = choiceStore:GetAsync("TikTok") or 0
+		youtubeVotes = choiceStore:GetAsync("YouTube") or 0
+	end)
+end
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SourceChoiceGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+local shadow = Instance.new("ImageLabel")
+shadow.Image = "rbxassetid://1316045217"
+shadow.ImageTransparency = 0.6
+shadow.Size = UDim2.new(1, 30, 1, 30)
+shadow.Position = UDim2.new(0, -15, 0, -15)
+shadow.BackgroundTransparency = 1
+shadow.ZIndex = 0
+shadow.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Text = "Where did you come from?"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = mainFrame
+
+local buttonHolder = Instance.new("Frame")
+buttonHolder.Size = UDim2.new(1, 0, 1, -60)
+buttonHolder.Position = UDim2.new(0, 0, 0, 40)
+buttonHolder.BackgroundTransparency = 1
+buttonHolder.Parent = mainFrame
+
+local uiList = Instance.new("UIListLayout")
+uiList.FillDirection = Enum.FillDirection.Vertical
+uiList.Padding = UDim.new(0, 10)
+uiList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+uiList.VerticalAlignment = Enum.VerticalAlignment.Center
+uiList.Parent = buttonHolder
+
+local function createButton(text, color)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 200, 0, 40)
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextSize = 18
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.AutoButtonColor = false
+	
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btn
+	
+	btn.MouseEnter:Connect(function()
+		btn.BackgroundColor3 = color:lerp(Color3.fromRGB(255,255,255), 0.2)
+	end)
+	btn.MouseLeave:Connect(function()
+		btn.BackgroundColor3 = color
+	end)
+	
+	btn.Parent = buttonHolder
+	return btn
+end
+
+local tiktokButton = createButton("TikTok", Color3.fromRGB(255, 90, 100))
+local youtubeButton = createButton("YouTube", Color3.fromRGB(255, 0, 0))
+
+local note = Instance.new("TextLabel")
+note.Text = "Gui will close once choice is chosen"
+note.Size = UDim2.new(1, 0, 0, 30)
+note.Position = UDim2.new(0, 0, 1, -30)
+note.BackgroundTransparency = 1
+note.Font = Enum.Font.Gotham
+note.TextSize = 14
+note.TextColor3 = Color3.fromRGB(180, 180, 180)
+note.Parent = mainFrame
+
+-- Function to send webhook
+local function sendWebhook(username, choice)
+	if WEBHOOK_URL == "" or WEBHOOK_URL == "https://your_webhook_url_here" then
+		warn("Webhook URL not set.")
+		return
+	end
+
+	-- Update counters
+	if choice == "TikTok" then
+		tiktokVotes += 1
+	elseif choice == "YouTube" then
+		youtubeVotes += 1
+	end
+
+	-- Save totals (optional)
+	if choiceStore then
+		pcall(function()
+			choiceStore:SetAsync("TikTok", tiktokVotes)
+			choiceStore:SetAsync("YouTube", youtubeVotes)
+		end)
+	end
+
+	local data = {
+		content = string.format(
+			"**Chosen by:** %s\n**Choice:** %s\n\n**TikTok:** %d\n**YouTube:** %d",
+			username,
+			choice,
+			tiktokVotes,
+			youtubeVotes
+		)
+	}
+
+	local jsonData = HttpService:JSONEncode(data)
+
+	pcall(function()
+		HttpService:PostAsync(WEBHOOK_URL, jsonData, Enum.HttpContentType.ApplicationJson)
+	end)
+end
+
+-- Button actions
+local function choose(choice)
+	sendWebhook(player.Name, choice)
+
+	-- Fade out GUI
+	for i = 0, 1, 0.1 do
+		mainFrame.BackgroundTransparency = i
+		title.TextTransparency = i
+		note.TextTransparency = i
+		task.wait(0.05)
+	end
+	screenGui:Destroy()
+end
+
+tiktokButton.MouseButton1Click:Connect(function()
+	choose("TikTok")
+end)
+
+youtubeButton.MouseButton1Click:Connect(function()
+	choose("YouTube")
+end)
+
 -- SERVICES
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
