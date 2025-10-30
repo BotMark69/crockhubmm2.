@@ -1,3 +1,174 @@
+-- Put this LocalScript in StarterGui
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- CONFIG
+local totalTime = 90 -- seconds
+local messageInterval = 15
+local messages = {
+	"Best Autofarm Script Right Now",
+	"Crock Hub on top",
+	"Please wait as crock hub bypasses anti cheat",
+	"Have fun farming!"
+}
+
+-- Helper easing (fast at start, slow near end)
+local function easingProgress(t)
+	return 1 - (1 - t) ^ 3
+end
+
+-- GUI SETUP
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CrockHubOverlay"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 9999
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.new(0, 0, 0)
+bg.BackgroundTransparency = 1
+bg.Parent = screenGui
+TweenService:Create(bg, TweenInfo.new(0.6), {BackgroundTransparency = 0}):Play()
+
+-- CENTER CONTAINER
+local container = Instance.new("Frame")
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.Size = UDim2.new(0.7, 0, 0.5, 0)
+container.BackgroundTransparency = 0.4
+container.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+container.Parent = bg
+
+-- Outline Around Container
+local containerOutline = Instance.new("UIStroke")
+containerOutline.Thickness = 4
+containerOutline.Color = Color3.fromRGB(255, 255, 255)
+containerOutline.Parent = container
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = container
+
+-- TITLE: CROCK HUB
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.3, 0)
+title.Position = UDim2.new(0, 0, 0.05, 0)
+title.BackgroundTransparency = 1
+title.Text = "CROCK HUB"
+title.TextScaled = true
+title.Font = Enum.Font.GothamBlack
+title.TextColor3 = Color3.new(0, 0, 0)
+title.Parent = container
+
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Thickness = 8
+titleStroke.Color = Color3.new(1, 1, 1)
+titleStroke.Parent = title
+
+-- MESSAGE ABOVE BAR
+local loadingLabel = Instance.new("TextLabel")
+loadingLabel.Size = UDim2.new(1, 0, 0.1, 0)
+loadingLabel.Position = UDim2.new(0, 0, 0.55, 0)
+loadingLabel.BackgroundTransparency = 1
+loadingLabel.Text = messages[1]
+loadingLabel.TextScaled = true
+loadingLabel.Font = Enum.Font.GothamBold
+loadingLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+loadingLabel.Parent = container
+
+local messageStroke = Instance.new("UIStroke")
+messageStroke.Thickness = 2
+messageStroke.Color = Color3.new(1, 1, 1)
+messageStroke.Parent = loadingLabel
+
+-- LOADING BAR
+local barContainer = Instance.new("Frame")
+barContainer.AnchorPoint = Vector2.new(0.5, 0)
+barContainer.Position = UDim2.new(0.5, 0, 0.7, 0)
+barContainer.Size = UDim2.new(0.9, 0, 0.08, 0)
+barContainer.BackgroundTransparency = 0
+barContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+barContainer.Parent = container
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0, 6)
+barCorner.Parent = barContainer
+
+local barOutline = Instance.new("UIStroke")
+barOutline.Thickness = 3
+barOutline.Color = Color3.fromRGB(255, 255, 255)
+barOutline.Parent = barContainer
+
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+progressFill.Parent = barContainer
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 6)
+fillCorner.Parent = progressFill
+
+local percentLabel = Instance.new("TextLabel")
+percentLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+percentLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+percentLabel.Size = UDim2.new(1, 0, 1, 0)
+percentLabel.BackgroundTransparency = 1
+percentLabel.Text = "0%"
+percentLabel.TextScaled = true
+percentLabel.Font = Enum.Font.GothamBold
+percentLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+percentLabel.Parent = barContainer
+
+local percentStroke = Instance.new("UIStroke")
+percentStroke.Thickness = 2
+percentStroke.Color = Color3.new(1, 1, 1)
+percentStroke.Parent = percentLabel
+
+-- MESSAGE ROTATION
+task.spawn(function()
+	for i = 1, math.ceil(totalTime / messageInterval) do
+		loadingLabel.Text = messages[(i - 1) % #messages + 1]
+		task.wait(messageInterval)
+	end
+end)
+
+-- PROGRESS BAR LOGIC
+local startTime = tick()
+task.spawn(function()
+	while true do
+		local elapsed = tick() - startTime
+		if elapsed >= totalTime then break end
+		local t = elapsed / totalTime
+		local eased = easingProgress(t)
+		progressFill.Size = UDim2.new(eased, 0, 1, 0)
+		percentLabel.Text = string.format("%d%%", math.floor(eased * 100))
+		task.wait(0.03)
+	end
+	progressFill.Size = UDim2.new(1, 0, 1, 0)
+	percentLabel.Text = "100%"
+end)
+
+-- FADE OUT ON COMPLETE
+task.delay(totalTime + 1, function()
+	local fadeTime = 1
+	local fadeObjects = {title, loadingLabel, percentLabel, progressFill, container}
+	for _, obj in ipairs(fadeObjects) do
+		if obj:IsA("TextLabel") then
+			TweenService:Create(obj, TweenInfo.new(fadeTime), {TextTransparency = 1}):Play()
+		elseif obj:IsA("Frame") then
+			TweenService:Create(obj, TweenInfo.new(fadeTime), {BackgroundTransparency = 1}):Play()
+		end
+	end
+	TweenService:Create(bg, TweenInfo.new(fadeTime), {BackgroundTransparency = 1}):Play()
+	task.wait(fadeTime)
+	screenGui:Destroy()
+end)
+
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
