@@ -1,4 +1,4 @@
-if not game:IsLoaded() then
+f/if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
@@ -317,7 +317,7 @@ task.spawn(function()
                 if dist > 150 then
                     hrp.CFrame = coin.CFrame
                 else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 30, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
                     tween:Play()
                     repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not _G.autoFarmEnabled
                     tween:Cancel()
