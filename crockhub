@@ -140,15 +140,19 @@ _G.antiafk = true
 _G.norender = false
 _G.speedhack = false
 _G.autoPickUpGun = false
+_G.jumpBoost = false
 
+-- GUI Toggles
 createToggle(15,  "Autofarm",       "autoFarmEnabled")
 createToggle(65,  "Auto Reset",     "autoResetEnabled")
 createToggle(115, "Role ESP",       "xray")
 createToggle(165, "Anti-AFK",       "antiafk")
 createToggle(215, "Disable Render", "norender")
 createToggle(265, "Speed Hack",     "speedhack")
-createToggle(315, "Auto Get Gun", "autoPickUpGun")
+createToggle(315, "Auto Get Gun",   "autoPickUpGun")
+createToggle(365, "Jump Boost",     "jumpBoost")
 
+-- GUI Close Button
 local xbtn = Instance.new("TextButton")
 xbtn.Size = UDim2.new(0, 46, 0, 46)
 xbtn.Position = UDim2.new(1, -56, 0, 10)
@@ -186,8 +190,25 @@ spawn(function()
     end
 end)
 
+spawn(function()
+    while task.wait(0.2) do
+        pcall(function()
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                local humanoid = player.Character.Humanoid
+                if _G.jumpBoost then
+                    humanoid.UseJumpPower = true
+                    humanoid.JumpPower = 100
+                else
+                    humanoid.UseJumpPower = true
+                    humanoid.JumpPower = 50
+                end
+            end
+        end)
+    end
+end)
+
 local espFolder = Instance.new("Folder")
-espFolder.Name = "CrazyHubESP"
+espFolder.Name = "CrockHubESP"
 espFolder.Parent = workspace
 
 local function updateESP()
@@ -352,7 +373,7 @@ task.spawn(function()
                 if dist > 150 then
                     hrp.CFrame = coin.CFrame
                 else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 30, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 25, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
                     tween:Play()
                     repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not _G.autoFarmEnabled
                     tween:Cancel()
