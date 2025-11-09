@@ -10,7 +10,6 @@ local Lighting = game:GetService("Lighting")
 local VirtualUser = game:GetService("VirtualUser")
 local player = Players.LocalPlayer
 
-
 spawn(function()
     while task.wait(3) do
         pcall(function()
@@ -25,7 +24,6 @@ spawn(function()
         end)
     end
 end)
-
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "Crock Hub 🎃"
@@ -74,7 +72,6 @@ inner.Position = UDim2.new(0, 8, 0, 8)
 inner.BackgroundTransparency = 1
 inner.Parent = content
 
-
 local function createToggle(y, text, var)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0.7, 0, 0, 34)
@@ -110,11 +107,14 @@ local function createToggle(y, text, var)
 
     btn.MouseButton1Click:Connect(function()
         _G[var] = not _G[var]
-        TweenService:Create(knob, TweenInfo.new(0.2), {Position = _G[var] and UDim2.new(1, -34, 0, 3) or UDim2.new(0, 4, 0, 3)}):Play()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = _G[var] and Color3.fromRGB(0, 255, 200) or Color3.fromRGB(40, 40, 40)}):Play()
+        TweenService:Create(knob, TweenInfo.new(0.2), {
+            Position = _G[var] and UDim2.new(1, -34, 0, 3) or UDim2.new(0, 4, 0, 3)
+        }):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = _G[var] and Color3.fromRGB(0, 255, 200) or Color3.fromRGB(40, 40, 40)
+        }):Play()
     end)
 end
-
 
 _G.autoFarmEnabled = false
 _G.autoResetEnabled = false
@@ -122,14 +122,15 @@ _G.xray = false
 _G.antiafk = true
 _G.norender = false
 _G.speedhack = false
+_G.autoPickUpGun = false  -- NEW TOGGLE
 
-createToggle(15,  "Autofarm",      "autoFarmEnabled")
-createToggle(65,  "Auto Reset",    "autoResetEnabled")
-createToggle(115, "Role ESP",      "xray")
-createToggle(165, "Anti-AFK",      "antiafk")
-createToggle(215, "Disable Render","norender")
-createToggle(265, "Speed Hack",    "speedhack")
-
+createToggle(15,  "Autofarm",       "autoFarmEnabled")
+createToggle(65,  "Auto Reset",     "autoResetEnabled")
+createToggle(115, "Role ESP",       "xray")
+createToggle(165, "Anti-AFK",       "antiafk")
+createToggle(215, "Disable Render", "norender")
+createToggle(265, "Speed Hack",     "speedhack")
+createToggle(315, "Auto Get Gun", "autoPickUpGun")
 
 local xbtn = Instance.new("TextButton")
 xbtn.Size = UDim2.new(0, 46, 0, 46)
@@ -149,11 +150,28 @@ xbtn.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
+spawn(function()
+    while task.wait(0.5) do
+        if _G.autoPickUpGun then
+            pcall(function()
+                local gunDrop = nil
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") and obj.Name == "GunDrop" then
+                        gunDrop = obj
+                        break
+                    end
+                end
+                if gunDrop and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = gunDrop.CFrame + Vector3.new(0, 3, 0)
+                end
+            end)
+        end
+    end
+end)
 
 local espFolder = Instance.new("Folder")
-espFolder.Name = "CrazyHubESP"
+espFolder.Name = "CrockHubESP"
 espFolder.Parent = workspace
-
 
 local function updateESP()
     if not _G.xray then
@@ -192,7 +210,8 @@ local function updateESP()
             nameLabel.Font = Enum.Font.Arcade
             nameLabel.TextSize = 18
         end
-        local gunDrop = workspace:FindFirstChild("GunDrop")
+
+        local gunDrop = workspace:FindFirstChild("GunDrop", true)
         if gunDrop and gunDrop:IsA("BasePart") then
             local gunBox = Instance.new("BoxHandleAdornment")
             gunBox.Size = gunDrop.Size + Vector3.new(2,2,2)
@@ -217,7 +236,6 @@ local function updateESP()
     end)
 end
 spawn(function() while task.wait(0.7) do updateESP() end end)
-
 
 spawn(function()
     while task.wait(0.1) do
@@ -317,7 +335,7 @@ task.spawn(function()
                 if dist > 150 then
                     hrp.CFrame = coin.CFrame
                 else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 25, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 30, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
                     tween:Play()
                     repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not _G.autoFarmEnabled
                     tween:Cancel()
