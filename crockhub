@@ -204,13 +204,13 @@ local function updateESP()
             local head = char:FindFirstChild("Head")
             if not root or not head then continue end
             local role = "Innocent"
-            local color = Color3.fromRGB(0,255,0)
-            if char:FindFirstChild("Knife") then role="Murderer" color=Color3.fromRGB(255,0,0)
-            elseif char:FindFirstChild("Gun") then role="Sheriff" color=Color3.fromRGB(0,100,255) end
+            local color = Color3.fromRGB(0,100,0)
+            if char:FindFirstChild("Knife") then role="Murderer" color=Color3.fromRGB(139,0,0)
+            elseif char:FindFirstChild("Gun") then role="Sheriff" color=Color3.fromRGB(0,0,139) end
             local box = Instance.new("BoxHandleAdornment")
-            box.Size = Vector3.new(3.5,5.5,3.5)
+            box.Size = Vector3.new(3,4,3)
             box.Color3 = color
-            box.Transparency = 0.3
+            box.Transparency = 0.2
             box.AlwaysOnTop = true
             box.Adornee = root
             box.Parent = espFolder
