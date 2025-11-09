@@ -57,7 +57,6 @@ title.Size = UDim2.new(1, -20, 0, 50)
 title.Position = UDim2.new(0, 10, 0, 10)
 title.BackgroundTransparency = 1
 title.Text = "Crock Hub 🎃"
-title.TextColor3 = Color3.fromRGB(0, 255, 255)
 title.Font = Enum.Font.Arcade
 title.TextSize = 40
 title.TextStrokeTransparency = 1
@@ -72,9 +71,41 @@ task.spawn(function()
 	end
 end)
 
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -20, 0, 46)
+tabFrame.Position = UDim2.new(0, 10, 0, 65)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = frame
+
+local tabs = {}
+local activeTab = nil
+
+local function createTab(name, xOffset)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 110, 0, 38)
+	btn.Position = UDim2.new(0, xOffset, 0, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	btn.BorderSizePixel = 2
+	btn.BorderColor3 = Color3.fromRGB(0, 255, 255)
+	btn.Text = name
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.Arcade
+	btn.TextSize = 28
+	btn.AutoButtonColor = false
+	btn.Parent = tabFrame
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 12)
+	tabs[name] = btn
+	return btn
+end
+
+local mainTab = createTab("Main", 0)
+local visualsTab = createTab("Visuals", 130)
+local miscTab = createTab("Misc", 260)
+
 local content = Instance.new("Frame")
-content.Size = UDim2.new(0.9, 0, 0.78, 0)
-content.Position = UDim2.new(0.05, 0, 0.18, 0)
+content.Size = UDim2.new(0.9, 0, 0.72, 0)
+content.Position = UDim2.new(0.05, 0, 0.22, 0)
 content.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 content.BackgroundTransparency = 0.5
 content.BorderSizePixel = 2
@@ -83,13 +114,44 @@ content.Parent = frame
 local corner = Instance.new("UICorner", content)
 corner.CornerRadius = UDim.new(0, 12)
 
-local inner = Instance.new("Frame")
-inner.Size = UDim2.new(1, -16, 1, -16)
-inner.Position = UDim2.new(0, 8, 0, 8)
-inner.BackgroundTransparency = 1
-inner.Parent = content
+local sections = {}
+for _, name in pairs({"Main", "Visuals", "Misc"}) do
+	local sec = Instance.new("Frame")
+	sec.Size = UDim2.new(1, -16, 1, -16)
+	sec.Position = UDim2.new(0, 8, 0, 8)
+	sec.BackgroundTransparency = 1
+	sec.Visible = false
+	sec.Parent = content
+	sections[name] = sec
+end
 
-local function createToggle(y, text, var)
+local function showTab(name)
+	for tabName, btn in pairs(tabs) do
+		if tabName == name then
+			activeTab = btn
+			sections[tabName].Visible = true
+			task.spawn(function()
+				local hue = 0
+				while activeTab == btn do
+					hue = (hue + 0.01) % 1
+					btn.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+					task.wait(0.005)
+				end
+			end)
+		else
+			btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			sections[tabName].Visible = false
+		end
+	end
+end
+
+for name, btn in pairs(tabs) do
+	btn.MouseButton1Click:Connect(function()
+		showTab(name)
+	end)
+end
+
+local function createToggle(parent, y, text, var)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0.7, 0, 0, 34)
     label.Position = UDim2.new(0.05, 0, 0, y)
@@ -99,7 +161,7 @@ local function createToggle(y, text, var)
     label.Font = Enum.Font.Arcade
     label.TextSize = 28
     label.TextStrokeTransparency = 1
-    label.Parent = inner
+    label.Parent = parent
 
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 68, 0, 36)
@@ -110,7 +172,7 @@ local function createToggle(y, text, var)
     btn.BorderSizePixel = 2
     btn.BorderColor3 = Color3.fromRGB(0, 255, 255)
     btn.AutoButtonColor = false
-    btn.Parent = inner
+    btn.Parent = parent
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 16)
 
@@ -133,6 +195,7 @@ local function createToggle(y, text, var)
     end)
 end
 
+-- Global Variables
 _G.autoFarmEnabled = false
 _G.autoResetEnabled = false
 _G.xray = false
@@ -142,17 +205,20 @@ _G.speedhack = false
 _G.autoPickUpGun = false
 _G.jumpBoost = false
 
--- GUI Toggles
-createToggle(15,  "Autofarm",       "autoFarmEnabled")
-createToggle(65,  "Auto Reset",     "autoResetEnabled")
-createToggle(115, "Role ESP",       "xray")
-createToggle(165, "Anti-AFK",       "antiafk")
-createToggle(215, "Disable Render", "norender")
-createToggle(265, "Speed Hack",     "speedhack")
-createToggle(315, "Auto Get Gun",   "autoPickUpGun")
-createToggle(365, "Jump Boost",     "jumpBoost")
+createToggle(sections.Main, 15, "Autofarm", "autoFarmEnabled")
+createToggle(sections.Main, 65, "Auto Reset", "autoResetEnabled")
+createToggle(sections.Main, 115, "Anti-AFK", "antiafk")
+createToggle(sections.Main, 165, "Auto Get Gun", "autoPickUpGun")
 
--- GUI Close Button
+createToggle(sections.Visuals, 15, "Role ESP", "xray")
+
+
+createToggle(sections.Misc, 15, "Jump Boost", "jumpBoost")
+createToggle(sections.Misc, 65, "Speed Boost", "speedhack")
+createToggle(sections.Misc, 115, "Disable Render", "norender")
+
+showTab("Main")
+
 local xbtn = Instance.new("TextButton")
 xbtn.Size = UDim2.new(0, 46, 0, 46)
 xbtn.Position = UDim2.new(1, -56, 0, 10)
@@ -162,7 +228,6 @@ xbtn.Text = "X"
 xbtn.TextColor3 = Color3.new(1, 1, 1)
 xbtn.Font = Enum.Font.Arcade
 xbtn.TextSize = 32
-xbtn.TextStrokeTransparency = 1
 xbtn.AutoButtonColor = false
 xbtn.Parent = frame
 local xcorner = Instance.new("UICorner", xbtn)
