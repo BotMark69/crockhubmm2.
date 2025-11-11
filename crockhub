@@ -33,8 +33,9 @@ gui.DisplayOrder = 999999
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 380, 0, 560)
-frame.Position = UDim2.new(0.5, -190, 0.5, -280)
+frame.Size = UDim2.new(0.35, 0, 0.75, 0)
+frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BackgroundTransparency = 0.6
 frame.BorderSizePixel = 3
@@ -53,12 +54,13 @@ task.spawn(function()
 end)
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -20, 0, 50)
+title.Size = UDim2.new(1, -20, 0.09, 0)
 title.Position = UDim2.new(0, 10, 0, 10)
 title.BackgroundTransparency = 1
 title.Text = "Crock Hub 🎃"
 title.Font = Enum.Font.Arcade
-title.TextSize = 40
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextStrokeTransparency = 1
 title.Parent = frame
 
@@ -72,25 +74,25 @@ task.spawn(function()
 end)
 
 local tabFrame = Instance.new("Frame")
-tabFrame.Size = UDim2.new(1, -20, 0, 46)
-tabFrame.Position = UDim2.new(0, 10, 0, 65)
+tabFrame.Size = UDim2.new(1, -20, 0.09, 0)
+tabFrame.Position = UDim2.new(0, 10, 0.12, 0)
 tabFrame.BackgroundTransparency = 1
 tabFrame.Parent = frame
 
 local tabs = {}
 local activeTab = nil
 
-local function createTab(name, xOffset)
+local function createTab(name, xScale)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 110, 0, 38)
-	btn.Position = UDim2.new(0, xOffset, 0, 0)
+	btn.Size = UDim2.new(0.23, 0, 1, 0)
+	btn.Position = UDim2.new(xScale, 0, 0, 0)
 	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	btn.BorderSizePixel = 2
 	btn.BorderColor3 = Color3.fromRGB(0, 255, 255)
 	btn.Text = name
 	btn.TextColor3 = Color3.new(1,1,1)
 	btn.Font = Enum.Font.Arcade
-	btn.TextSize = 28
+	btn.TextScaled = true
 	btn.AutoButtonColor = false
 	btn.Parent = tabFrame
 	local corner = Instance.new("UICorner", btn)
@@ -100,8 +102,9 @@ local function createTab(name, xOffset)
 end
 
 local mainTab = createTab("Main", 0)
-local visualsTab = createTab("Visuals", 130)
-local miscTab = createTab("Misc", 260)
+local visualsTab = createTab("Visuals", 0.25)
+local miscTab = createTab("Misc", 0.5)
+local infoTab = createTab("Info", 0.75)
 
 local content = Instance.new("Frame")
 content.Size = UDim2.new(0.9, 0, 0.72, 0)
@@ -115,7 +118,7 @@ local corner = Instance.new("UICorner", content)
 corner.CornerRadius = UDim.new(0, 12)
 
 local sections = {}
-for _, name in pairs({"Main", "Visuals", "Misc"}) do
+for _, name in pairs({"Main", "Visuals", "Misc", "Info"}) do
 	local sec = Instance.new("Frame")
 	sec.Size = UDim2.new(1, -16, 1, -16)
 	sec.Position = UDim2.new(0, 8, 0, 8)
@@ -151,21 +154,23 @@ for name, btn in pairs(tabs) do
 	end)
 end
 
-local function createToggle(parent, y, text, var)
+local function createToggle(parent, order, text, var)
+    local spacing = 0.08
+    local baseY = (order - 1) * spacing
+
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.7, 0, 0, 34)
-    label.Position = UDim2.new(0.05, 0, 0, y)
+    label.Size = UDim2.new(0.7, 0, 0.07, 0)
+    label.Position = UDim2.new(0.05, 0, baseY, 0)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.new(1, 1, 1)
     label.Font = Enum.Font.Arcade
-    label.TextSize = 28
-    label.TextStrokeTransparency = 1
+    label.TextScaled = true
     label.Parent = parent
 
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 68, 0, 36)
-    btn.Position = UDim2.new(0.73, 0, 0, y - 2)
+    btn.Size = UDim2.new(0.2, 0, 0.07, 0)
+    btn.Position = UDim2.new(0.75, 0, baseY, 0)
     btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     btn.BackgroundTransparency = 0.3
     btn.Text = ""
@@ -177,7 +182,7 @@ local function createToggle(parent, y, text, var)
     btnCorner.CornerRadius = UDim.new(0, 16)
 
     local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 30, 0, 30)
+    knob.Size = UDim2.new(0.4, 0, 1, -6)
     knob.Position = UDim2.new(0, 4, 0, 3)
     knob.BackgroundColor3 = Color3.new(1, 1, 1)
     knob.Parent = btn
@@ -187,7 +192,7 @@ local function createToggle(parent, y, text, var)
     btn.MouseButton1Click:Connect(function()
         _G[var] = not _G[var]
         TweenService:Create(knob, TweenInfo.new(0.2), {
-            Position = _G[var] and UDim2.new(1, -34, 0, 3) or UDim2.new(0, 4, 0, 3)
+            Position = _G[var] and UDim2.new(1, -btn.AbsoluteSize.Y, 0, 3) or UDim2.new(0, 4, 0, 3)
         }):Play()
         TweenService:Create(btn, TweenInfo.new(0.2), {
             BackgroundColor3 = _G[var] and Color3.fromRGB(0, 255, 200) or Color3.fromRGB(40, 40, 40)
@@ -195,7 +200,6 @@ local function createToggle(parent, y, text, var)
     end)
 end
 
--- Global Variables
 _G.autoFarmEnabled = false
 _G.autoResetEnabled = false
 _G.xray = false
@@ -204,36 +208,103 @@ _G.norender = false
 _G.speedhack = false
 _G.autoPickUpGun = false
 _G.jumpBoost = false
+_G.killAll = false
+_G.noclip = false
+_G.infJump = false
 
-createToggle(sections.Main, 15, "Autofarm", "autoFarmEnabled")
-createToggle(sections.Main, 65, "Auto Reset", "autoResetEnabled")
-createToggle(sections.Main, 115, "Anti-AFK", "antiafk")
-createToggle(sections.Main, 165, "Auto Get Gun", "autoPickUpGun")
+createToggle(sections.Main, 1, "Autofarm", "autoFarmEnabled")
+createToggle(sections.Main, 2, "Auto Reset", "autoResetEnabled")
+createToggle(sections.Main, 3, "Anti-AFK", "antiafk")
+createToggle(sections.Main, 4, "Auto Get Gun", "autoPickUpGun")
+createToggle(sections.Main, 5, "Kill All", "killAll")
 
-createToggle(sections.Visuals, 15, "Role ESP", "xray")
+createToggle(sections.Visuals, 1, "Role ESP", "xray")
+createToggle(sections.Misc, 1, "Jump Boost", "jumpBoost")
+createToggle(sections.Misc, 2, "Speed Boost", "speedhack")
+createToggle(sections.Misc, 3, "Disable Render", "norender")
+createToggle(sections.Misc, 4, "Noclip", "noclip")
+createToggle(sections.Misc, 5, "Infinite Jump", "infJump")
 
+local infoSec = sections.Info
 
-createToggle(sections.Misc, 15, "Jump Boost", "jumpBoost")
-createToggle(sections.Misc, 65, "Speed Boost", "speedhack")
-createToggle(sections.Misc, 115, "Disable Render", "norender")
+local tiktok = Instance.new("TextLabel")
+tiktok.Size = UDim2.new(1, 0, 0.15, 0)
+tiktok.Position = UDim2.new(0, 0, 0.1, 0)
+tiktok.BackgroundTransparency = 1
+tiktok.Text = "TikTok: @_cuz_"
+tiktok.TextColor3 = Color3.fromRGB(255, 255, 255)
+tiktok.Font = Enum.Font.Arcade
+tiktok.TextScaled = true
+tiktok.Parent = infoSec
+
+local youtube = Instance.new("TextLabel")
+youtube.Size = UDim2.new(1, 0, 0.15, 0)
+youtube.Position = UDim2.new(0, 0, 0.3, 0)
+youtube.BackgroundTransparency = 1
+youtube.Text = "Youtube: @crooock"
+youtube.TextColor3 = Color3.fromRGB(255, 255, 255)
+youtube.Font = Enum.Font.Arcade
+youtube.TextScaled = true
+youtube.Parent = infoSec
 
 showTab("Main")
 
 local xbtn = Instance.new("TextButton")
-xbtn.Size = UDim2.new(0, 46, 0, 46)
-xbtn.Position = UDim2.new(1, -56, 0, 10)
+xbtn.Size = UDim2.new(0.12, 0, 0.09, 0)
+xbtn.Position = UDim2.new(0.88, 0, 0.02, 0)
 xbtn.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
 xbtn.BackgroundTransparency = 0.2
 xbtn.Text = "X"
 xbtn.TextColor3 = Color3.new(1, 1, 1)
 xbtn.Font = Enum.Font.Arcade
-xbtn.TextSize = 32
+xbtn.TextScaled = true
 xbtn.AutoButtonColor = false
 xbtn.Parent = frame
 local xcorner = Instance.new("UICorner", xbtn)
 xcorner.CornerRadius = UDim.new(1, 0)
 xbtn.MouseButton1Click:Connect(function()
     gui:Destroy()
+end)
+
+spawn(function()
+    while task.wait(0.2) do
+        pcall(function()
+            if _G.killAll then
+                local char = player.Character
+                if char and char:FindFirstChild("Knife") then
+                    local knife = char:FindFirstChild("Knife")
+                    local handle = knife:FindFirstChild("Handle")
+                    if handle then
+                        handle.Size = Vector3.new(200, 200, 200)
+                        handle.Massless = true
+                        handle.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            local char = player.Character
+            if char and _G.noclip then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local UserInputService = game:GetService("UserInputService")
+UserInputService.JumpRequest:Connect(function()
+    if _G.infJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
 end)
 
 spawn(function()
@@ -438,7 +509,7 @@ task.spawn(function()
                 if dist > 150 then
                     hrp.CFrame = coin.CFrame
                 else
-                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 25, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
+                    local tween = TweenService:Create(hrp, TweenInfo.new(dist / 23, Enum.EasingStyle.Linear), {CFrame = coin.CFrame})
                     tween:Play()
                     repeat task.wait() until not coin:FindFirstChild("TouchInterest") or not farming or not _G.autoFarmEnabled
                     tween:Cancel()
